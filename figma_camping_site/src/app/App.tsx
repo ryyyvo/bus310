@@ -16,7 +16,7 @@ export default function App() {
     <TripProvider>
       <div className="min-h-screen bg-background">
         <Toaster />
-
+        
         {/* Header */}
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-6">
