@@ -5,11 +5,13 @@ Express.js backend for the camping trip planning application, featuring AI-power
 ## Architecture Overview
 
 The backend uses a **Retrieval-Augmented Generation (RAG)** pattern to combine:
+
 - Real-time campsite data from National Parks Service API
 - AI-powered conversational interface (Claude)
 - MongoDB for storing trips, user data, and chat history
 
 ### Data Flow
+
 ```
 UI Modal (constraints) → User Query → AI generates search params →
 Fetch campsites from NPS API → Format context with constraints →
@@ -37,6 +39,7 @@ Known user constraints:
 ```
 
 **Why this order?**
+
 - System instructions establish role and behavior
 - Constraints tell the AI what to filter for
 - Retrieved data is last to leverage LLM "recency bias" (more attention to recent context)
@@ -88,6 +91,7 @@ npm install
 ### 2. Get API Keys
 
 #### Anthropic API Key (Claude)
+
 1. Go to https://console.anthropic.com/
 2. Sign up or log in
 3. Navigate to API Keys
@@ -95,6 +99,7 @@ npm install
 5. Copy the key (starts with `sk-ant-...`)
 
 #### National Parks Service API Key
+
 1. Go to https://www.nps.gov/subjects/developer/get-started.htm
 2. Click "Get an API Key"
 3. Fill out the form
@@ -103,6 +108,7 @@ npm install
 ### 3. Set Up MongoDB
 
 **Option A: Local MongoDB**
+
 ```bash
 # Install MongoDB (macOS)
 brew tap mongodb/brew
@@ -113,6 +119,7 @@ brew services start mongodb-community
 ```
 
 **Option B: MongoDB Atlas (Cloud)**
+
 1. Go to https://www.mongodb.com/cloud/atlas
 2. Create free account and cluster
 3. Get connection string (looks like `mongodb+srv://...`)
@@ -145,11 +152,13 @@ NPS_API_KEY=your-nps-key-here
 ### 5. Start the Server
 
 **Development mode (with auto-reload):**
+
 ```bash
 npm run dev
 ```
 
 **Production mode:**
+
 ```bash
 npm start
 ```
@@ -161,6 +170,7 @@ Server will start on http://localhost:3001
 ### Chat Endpoints
 
 #### Create Chat Session
+
 ```http
 POST /api/chat/sessions
 Content-Type: application/json
@@ -171,6 +181,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "65f1a2b3c4d5e6f7g8h9i0j1",
@@ -184,6 +195,7 @@ Content-Type: application/json
 ```
 
 #### Send Message
+
 ```http
 POST /api/chat/sessions/:sessionId/messages
 Content-Type: application/json
@@ -203,6 +215,7 @@ Content-Type: application/json
 ```
 
 **Constraints Object (all fields optional):**
+
 - `startDate` (string, ISO-8601): Trip start date
 - `endDate` (string, ISO-8601): Trip end date
 - `partySize` (number): Number of people
@@ -212,6 +225,7 @@ Content-Type: application/json
 - `amenities` (array): Required amenities
 
 **Response:**
+
 ```json
 {
   "message": "Great choice! Yosemite is perfect for...",
@@ -224,11 +238,13 @@ Content-Type: application/json
 ```
 
 #### Get Chat Session
+
 ```http
 GET /api/chat/sessions/:sessionId
 ```
 
 #### Get User's Chat Sessions
+
 ```http
 GET /api/chat/users/:userId/sessions
 ```
@@ -236,11 +252,13 @@ GET /api/chat/users/:userId/sessions
 ### Campsite Endpoints
 
 #### Search Parks
+
 ```http
 GET /api/campsites/parks?state=CA&query=yosemite&limit=10
 ```
 
 **Response:**
+
 ```json
 {
   "count": 5,
@@ -257,21 +275,25 @@ GET /api/campsites/parks?state=CA&query=yosemite&limit=10
 ```
 
 #### Get Park Details
+
 ```http
 GET /api/campsites/parks/:parkCode
 ```
 
 #### Get Campgrounds
+
 ```http
 GET /api/campsites/parks/:parkCode/campgrounds
 ```
 
 #### Get Activities
+
 ```http
 GET /api/campsites/activities
 ```
 
 #### Search Parks by Activity
+
 ```http
 GET /api/campsites/activities/:activityId/parks?state=CA
 ```
@@ -279,6 +301,7 @@ GET /api/campsites/activities/:activityId/parks?state=CA
 ### Trip Endpoints
 
 #### Create Trip
+
 ```http
 POST /api/trips
 Content-Type: application/json
@@ -298,16 +321,19 @@ Content-Type: application/json
 ```
 
 #### Get Trip
+
 ```http
 GET /api/trips/:tripId
 ```
 
 #### Get User's Trips
+
 ```http
 GET /api/trips/users/:userId
 ```
 
 #### Update Trip
+
 ```http
 PUT /api/trips/:tripId
 Content-Type: application/json
@@ -319,11 +345,13 @@ Content-Type: application/json
 ```
 
 #### Delete Trip
+
 ```http
 DELETE /api/trips/:tripId
 ```
 
 #### Add Collaborator
+
 ```http
 POST /api/trips/:tripId/collaborators
 Content-Type: application/json
@@ -334,6 +362,7 @@ Content-Type: application/json
 ```
 
 #### Update Gear List
+
 ```http
 PUT /api/trips/:tripId/gear
 Content-Type: application/json
@@ -356,6 +385,7 @@ Content-Type: application/json
 ```
 
 #### Update Food List
+
 ```http
 PUT /api/trips/:tripId/food
 Content-Type: application/json
@@ -373,6 +403,7 @@ Content-Type: application/json
 ```
 
 #### Update Itinerary
+
 ```http
 PUT /api/trips/:tripId/itinerary
 Content-Type: application/json
@@ -395,6 +426,7 @@ Content-Type: application/json
 ```
 
 ### Health Check
+
 ```http
 GET /api/health
 ```
@@ -432,11 +464,13 @@ Known user constraints:
 ```
 
 The `chat()` method accepts three parameters:
+
 - `messages`: Chat history
 - `campsiteContext`: Formatted campsite data from NPS API
 - `constraints`: User constraints object (optional)
 
 This RAG approach ensures:
+
 - ✅ Accurate, up-to-date campsite information
 - ✅ Natural conversational interface
 - ✅ Personalized recommendations based on constraints
@@ -453,8 +487,8 @@ When integrating with your React frontend, send constraints from the UI modal al
 // React example
 const sendMessage = async (message, constraints) => {
   const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       message,
       constraints: {
@@ -464,9 +498,9 @@ const sendMessage = async (message, constraints) => {
         budgetMin: constraints.budgetMin,
         budgetMax: constraints.budgetMax,
         campingStyle: constraints.campingStyle,
-        amenities: constraints.amenities
-      }
-    })
+        amenities: constraints.amenities,
+      },
+    }),
   });
 
   return response.json();
@@ -485,6 +519,7 @@ const sendMessage = async (message, constraints) => {
 ### Storing Constraints in Chat Session
 
 Constraints are session-level (not message-level), so you can:
+
 - Store them in React state
 - Send them with every message in the session
 - Update them when user modifies the modal
@@ -524,6 +559,7 @@ curl -X POST http://localhost:3001/api/chat/sessions/SESSION_ID/messages \
 ### Monitoring Logs
 
 The server logs important events:
+
 - MongoDB connection status
 - API requests to NPS
 - AI service calls
@@ -565,16 +601,19 @@ Campsite data is cached for 1 hour to reduce API calls. Clear cache by restartin
 ### RAG Architecture Decisions
 
 **Why we put constraints in the system prompt:**
+
 - Constraints are session-level (dates, budget, party size don't change per message)
 - System prompt stays consistent across the conversation
 - Better than putting in user message since constraints aren't part of the query
 
 **Why retrieved data goes last in system prompt:**
+
 - LLMs exhibit "recency bias" - more attention to recent context
 - Campsite data is most relevant to the current query
 - Follows RAG best practices
 
 **Prompt structure we implemented:**
+
 ```
 ## Role
 You are a RAG assistant...
@@ -607,30 +646,29 @@ You are a RAG assistant...
 
 ```typescript
 interface Constraints {
-  startDate?: string;        // ISO-8601 format
-  endDate?: string;          // ISO-8601 format
+  startDate?: string; // ISO-8601 format
+  endDate?: string; // ISO-8601 format
   partySize?: number;
   budgetMin?: number;
   budgetMax?: number;
-  campingStyle?: string;     // "car camping", "backpacking", "RV"
-  amenities?: string[];      // ["bathrooms", "water", "showers"]
+  campingStyle?: string; // "car camping", "backpacking", "RV"
+  amenities?: string[]; // ["bathrooms", "water", "showers"]
 }
 ```
 
 ## Troubleshooting
 
 **MongoDB connection error:**
+
 - Ensure MongoDB is running: `brew services list`
 - Check MONGODB_URI in `.env`
 
 **Anthropic API error:**
+
 - Verify API key is correct in `.env`
 - Check API quota at https://console.anthropic.com/
 
 **National Parks API error:**
+
 - Verify API key is valid
 - Check rate limits (default: 1000 requests/hour)
-
-## License
-
-MIT
