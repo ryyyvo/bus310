@@ -1,0 +1,15 @@
+{
+  "name": "oso",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": ""
+}
