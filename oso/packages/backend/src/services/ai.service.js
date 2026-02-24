@@ -1,11 +1,12 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 
 class AIService {
   constructor() {
-    this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+    console.log(process.env.GROQ_API_KEY);
+    this.client = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
     });
-    this.model = "claude-3-5-sonnet-20241022";
+    this.model = "meta-llama/llama-4-maverick-17b-128e-instruct";
   }
 
   /**
@@ -97,21 +98,26 @@ Use the campsite information above to provide specific recommendations.
 ${campsiteContext}
 `;
 
-      const formattedMessages = messages.map((msg) => ({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: msg.content,
-      }));
+      const formattedMessages = [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        ...messages.map((msg) => ({
+          role: msg.role === "assistant" ? "assistant" : "user",
+          content: msg.content,
+        })),
+      ];
 
-      const response = await this.client.messages.create({
+      const response = await this.client.chat.completions.create({
         model: this.model,
         max_tokens: 1024,
-        system: systemPrompt,
         messages: formattedMessages,
       });
 
-      return response.content[0].text;
+      return response.choices[0].message.content;
     } catch (error) {
-      console.error("Error calling Claude API:", error.message);
+      console.error("Error calling Groq API:", error.message);
       throw new Error("Failed to generate AI response");
     }
   }
@@ -140,13 +146,14 @@ Only include fields that are clearly mentioned. Return null for unknown fields.
 Conversation:
 ${conversationText}`;
 
-      const response = await this.client.messages.create({
+      const response = await this.client.chat.completions.create({
         model: this.model,
         max_tokens: 500,
         messages: [{ role: "user", content: extractionPrompt }],
       });
 
-      const jsonMatch = response.content[0].text.match(/\{[\s\S]*\}/);
+      const jsonMatch =
+        response.choices[0].message.content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
@@ -175,13 +182,14 @@ User message: "${userMessage}"
 
 Return only the JSON object, no explanation.`;
 
-      const response = await this.client.messages.create({
+      const response = await this.client.chat.completions.create({
         model: this.model,
         max_tokens: 200,
         messages: [{ role: "user", content: prompt }],
       });
 
-      const jsonMatch = response.content[0].text.match(/\{[\s\S]*\}/);
+      const jsonMatch =
+        response.choices[0].message.content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }

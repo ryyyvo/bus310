@@ -1,13 +1,13 @@
+// MUST be first import - loads environment variables
+import "./config/env.js";
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { connectDB } from "./config/database.js";
 
 import chatRoutes from "./routes/chat.routes.js";
 import campsiteRoutes from "./routes/campsite.routes.js";
 import tripRoutes from "./routes/trip.routes.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

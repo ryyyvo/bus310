@@ -7,7 +7,7 @@ Express.js backend for the camping trip planning application, featuring AI-power
 The backend uses a **Retrieval-Augmented Generation (RAG)** pattern to combine:
 
 - Real-time campsite data from National Parks Service API
-- AI-powered conversational interface (Claude)
+- AI-powered conversational interface (Groq with Llama 4 Maverick)
 - MongoDB for storing trips, user data, and chat history
 
 ### Data Flow
@@ -48,7 +48,7 @@ Known user constraints:
 
 - **Node.js** + **Express** - Server framework
 - **MongoDB** + **Mongoose** - Database
-- **Claude API** (@anthropic-ai/sdk) - AI chat
+- **Groq API** (groq-sdk) - AI chat with meta-llama/llama-4-maverick-17b-128e-instruct
 - **National Parks Service API** - Campsite data
 - **node-cache** - In-memory caching for API responses
 
@@ -65,7 +65,7 @@ backend/
 │   │   ├── ChatSession.model.js
 │   │   └── User.model.js
 │   ├── services/
-│   │   ├── ai.service.js      # Claude AI integration
+│   │   ├── ai.service.js      # Groq AI integration (Llama 4)
 │   │   └── campsite.service.js # NPS API integration
 │   ├── controllers/
 │   │   ├── chat.controller.js
@@ -90,13 +90,13 @@ npm install
 
 ### 2. Get API Keys
 
-#### Anthropic API Key (Claude)
+#### Groq API Key
 
-1. Go to https://console.anthropic.com/
+1. Go to https://console.groq.com/
 2. Sign up or log in
 3. Navigate to API Keys
 4. Create a new API key
-5. Copy the key (starts with `sk-ant-...`)
+5. Copy the key
 
 #### National Parks Service API Key
 
@@ -142,8 +142,8 @@ NODE_ENV=development
 MONGODB_URI=mongodb://localhost:27017/camping_planner
 # or for Atlas: mongodb+srv://username:password@cluster.mongodb.net/camping_planner
 
-# Anthropic API
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+# Groq API (Llama 4 Maverick)
+GROQ_API_KEY=your-groq-api-key-here
 
 # National Parks Service API
 NPS_API_KEY=your-nps-key-here
@@ -574,7 +574,7 @@ Campsite data is cached for 1 hour to reduce API calls. Clear cache by restartin
 ### ✅ Completed
 
 - [x] Express server with MongoDB integration
-- [x] RAG pattern with Claude AI
+- [x] RAG pattern with Groq AI (Llama 4 Maverick)
 - [x] National Parks Service API integration with caching
 - [x] User constraints support (dates, party size, budget, etc.)
 - [x] Optimal system prompt structure (Role → Constraints → Data)
@@ -663,10 +663,10 @@ interface Constraints {
 - Ensure MongoDB is running: `brew services list`
 - Check MONGODB_URI in `.env`
 
-**Anthropic API error:**
+**Groq API error:**
 
 - Verify API key is correct in `.env`
-- Check API quota at https://console.anthropic.com/
+- Check API quota and rate limits at https://console.groq.com/
 
 **National Parks API error:**
 
