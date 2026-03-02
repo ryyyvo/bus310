@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   createTrip,
   getTrip,
@@ -8,32 +8,32 @@ import {
   addCollaborator,
   updateGearList,
   updateFoodList,
-  updateItinerary
-} from '../controllers/trip.controller.js';
+  updateItinerary,
+} from "../controllers/trip.controller.js";
 
 const router = express.Router();
 
 // Create trip
-router.post('/', createTrip);
+router.post("/", createTrip);
 
 // Get trip by ID
-router.get('/:tripId', getTrip);
+router.get("/:tripId", getTrip);
 
 // Get user's trips
-router.get('/users/:userId', getUserTrips);
+router.get("/users/:userId", getUserTrips);
 
 // Update trip
-router.put('/:tripId', updateTrip);
+router.put("/:tripId", updateTrip);
 
 // Delete trip
-router.delete('/:tripId', deleteTrip);
+router.delete("/:tripId", deleteTrip);
 
 // Add collaborator
-router.post('/:tripId/collaborators', addCollaborator);
+router.post("/:tripId/collaborators", addCollaborator);
 
 // Update specific trip components
-router.put('/:tripId/gear', updateGearList);
-router.put('/:tripId/food', updateFoodList);
-router.put('/:tripId/itinerary', updateItinerary);
+router.put("/:tripId/gear", updateGearList);
+router.put("/:tripId/food", updateFoodList);
+router.put("/:tripId/itinerary", updateItinerary);
 
 export default router;
