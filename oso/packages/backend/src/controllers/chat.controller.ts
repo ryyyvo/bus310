@@ -1,11 +1,13 @@
+import type { Request, Response } from "express";
 import ChatSession from "../models/ChatSession.model.js";
 import aiService from "../services/ai.service.js";
 import campsiteService from "../services/campsite.service.js";
+import type { SendMessageRequest, Park } from "../types";
 
 /**
  * Create a new chat session
  */
-export const createChatSession = async (req, res) => {
+export const createChatSession = async (req: Request, res: Response) => {
   try {
     const { userId } = req.body;
 
@@ -27,23 +29,23 @@ export const createChatSession = async (req, res) => {
 
     await chatSession.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       sessionId: chatSession._id,
       messages: chatSession.messages,
     });
   } catch (error) {
     console.error("Error creating chat session:", error);
-    res.status(500).json({ error: "Failed to create chat session" });
+    return res.status(500).json({ error: "Failed to create chat session" });
   }
 };
 
 /**
  * Send a message in a chat session
  */
-export const sendMessage = async (req, res) => {
+export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params;
-    const { message, constraints } = req.body;
+    const { message, constraints } = req.body as SendMessageRequest;
 
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
@@ -65,7 +67,7 @@ export const sendMessage = async (req, res) => {
 
     // Fetch relevant campsite data if query is meaningful
     let campsiteContext = "";
-    let campsiteData = [];
+    let campsiteData: Park[] = [];
 
     if (searchParams.query || searchParams.activities.length > 0) {
       try {
@@ -101,7 +103,17 @@ export const sendMessage = async (req, res) => {
 
     // Extract and update preferences
     const preferences = await aiService.extractPreferences(
-      chatSession.messages,
+      chatSession.messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp,
+        metadata: m.metadata
+          ? {
+              campsites: m.metadata.campsites,
+              searchQuery: m.metadata.searchQuery || undefined,
+            }
+          : undefined,
+      })),
     );
     if (Object.keys(preferences).length > 0) {
       chatSession.preferences = { ...chatSession.preferences, ...preferences };
@@ -109,21 +121,21 @@ export const sendMessage = async (req, res) => {
 
     await chatSession.save();
 
-    res.json({
+    return res.json({
       message: aiResponse,
       campsites: campsiteData,
       preferences: chatSession.preferences,
     });
   } catch (error) {
     console.error("Error sending message:", error);
-    res.status(500).json({ error: "Failed to process message" });
+    return res.status(500).json({ error: "Failed to process message" });
   }
 };
 
 /**
  * Get chat session by ID
  */
-export const getChatSession = async (req, res) => {
+export const getChatSession = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params;
 
@@ -132,17 +144,17 @@ export const getChatSession = async (req, res) => {
       return res.status(404).json({ error: "Chat session not found" });
     }
 
-    res.json(chatSession);
+    return res.json(chatSession);
   } catch (error) {
     console.error("Error fetching chat session:", error);
-    res.status(500).json({ error: "Failed to fetch chat session" });
+    return res.status(500).json({ error: "Failed to fetch chat session" });
   }
 };
 
 /**
  * Get all chat sessions for a user
  */
-export const getUserChatSessions = async (req, res) => {
+export const getUserChatSessions = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 

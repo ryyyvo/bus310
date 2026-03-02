@@ -1,7 +1,7 @@
 // MUST be first import - loads environment variables
 import "./config/env.js";
 
-import express from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { connectDB } from "./config/database.js";
 
@@ -20,11 +20,11 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/campsites", campsiteRoutes);
 app.use("/api/trips", tripRoutes);
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use((err, req, res, next) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong!",

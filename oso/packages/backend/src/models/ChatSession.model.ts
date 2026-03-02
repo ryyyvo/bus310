@@ -28,16 +28,16 @@ const chatSessionSchema = new mongoose.Schema(
 
     // User preferences extracted from chat
     preferences: {
-      states: [String],
-      activities: [String],
-      groupSize: Number,
-      experienceLevel: String,
+      states: { type: [String], required: false },
+      activities: { type: [String], required: false },
+      groupSize: { type: Number, required: false },
+      experienceLevel: { type: String, required: false },
       dates: {
-        startDate: Date,
-        endDate: Date,
-        flexible: Boolean,
+        startDate: { type: Date, required: false },
+        endDate: { type: Date, required: false },
+        flexible: { type: Boolean, required: false },
       },
-      budget: String,
+      budget: { type: String, required: false },
     },
 
     // Session status

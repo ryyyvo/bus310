@@ -1,8 +1,11 @@
 import Groq from "groq-sdk";
+import type { UserConstraints, ChatMessage, ChatPreferences, SearchParams } from "../types/index.js";
 
 class AIService {
+  private client: Groq;
+  private model: string;
+
   constructor() {
-    console.log(process.env.GROQ_API_KEY);
     this.client = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
@@ -11,10 +14,8 @@ class AIService {
 
   /**
    * Format user constraints for system prompt
-   * @param {Object} constraints - User constraints from modal
-   * @returns {string} Formatted constraints string
    */
-  formatConstraints(constraints) {
+  formatConstraints(constraints?: UserConstraints | null): string {
     if (!constraints || Object.keys(constraints).length === 0) {
       return "";
     }
@@ -58,12 +59,12 @@ class AIService {
 
   /**
    * Generate AI response for camping trip planning
-   * @param {Array} messages - Chat history
-   * @param {string} campsiteContext - Formatted campsite data
-   * @param {Object} constraints - User-defined constraints (dates, budget, party size, etc.)
-   * @returns {string} AI response
    */
-  async chat(messages, campsiteContext = "", constraints = null) {
+  async chat(
+    messages: ChatMessage[],
+    campsiteContext: string = "",
+    constraints: UserConstraints | null = null
+  ): Promise<string> {
     try {
       const constraintsText = this.formatConstraints(constraints);
 
@@ -100,11 +101,11 @@ ${campsiteContext}
 
       const formattedMessages = [
         {
-          role: "system",
+          role: "system" as const,
           content: systemPrompt,
         },
         ...messages.map((msg) => ({
-          role: msg.role === "assistant" ? "assistant" : "user",
+          role: (msg.role === "assistant" ? "assistant" : "user") as "user" | "assistant",
           content: msg.content,
         })),
       ];
@@ -115,19 +116,18 @@ ${campsiteContext}
         messages: formattedMessages,
       });
 
-      return response.choices[0].message.content;
+      return response.choices[0].message.content || "";
     } catch (error) {
-      console.error("Error calling Groq API:", error.message);
+      const err = error as Error;
+      console.error("Error calling Groq API:", err.message);
       throw new Error("Failed to generate AI response");
     }
   }
 
   /**
    * Extract user preferences from conversation
-   * @param {Array} messages - Chat history
-   * @returns {Object} Extracted preferences
    */
-  async extractPreferences(messages) {
+  async extractPreferences(messages: ChatMessage[]): Promise<Partial<ChatPreferences>> {
     try {
       const conversationText = messages
         .map((m) => `${m.role}: ${m.content}`)
@@ -152,25 +152,26 @@ ${conversationText}`;
         messages: [{ role: "user", content: extractionPrompt }],
       });
 
-      const jsonMatch =
-        response.choices[0].message.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      const content = response.choices[0].message.content;
+      if (content) {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
       }
 
       return {};
     } catch (error) {
-      console.error("Error extracting preferences:", error.message);
+      const err = error as Error;
+      console.error("Error extracting preferences:", err.message);
       return {};
     }
   }
 
   /**
    * Generate campsite search parameters from user message
-   * @param {string} userMessage - User's message
-   * @returns {Object} Search parameters
    */
-  async generateSearchParams(userMessage) {
+  async generateSearchParams(userMessage: string): Promise<SearchParams> {
     try {
       const prompt = `Based on this user message, extract search parameters for finding campsites.
 Return a JSON object with:
@@ -188,15 +189,18 @@ Return only the JSON object, no explanation.`;
         messages: [{ role: "user", content: prompt }],
       });
 
-      const jsonMatch =
-        response.choices[0].message.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      const content = response.choices[0].message.content;
+      if (content) {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
       }
 
       return { query: "", state: "CA", activities: [] };
     } catch (error) {
-      console.error("Error generating search params:", error.message);
+      const err = error as Error;
+      console.error("Error generating search params:", err.message);
       return { query: "", state: "CA", activities: [] };
     }
   }
