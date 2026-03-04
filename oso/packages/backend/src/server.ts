@@ -9,6 +9,7 @@ import express, {
 import cors from "cors";
 import { connectDB } from "./config/database.js";
 
+import authRoutes from "./routes/auth.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import campsiteRoutes from "./routes/campsite.routes.js";
 import tripRoutes from "./routes/trip.routes.js";
@@ -28,6 +29,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/campsites", campsiteRoutes);
 app.use("/api/trips", tripRoutes);
