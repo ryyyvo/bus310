@@ -1,7 +1,11 @@
 // MUST be first import - loads environment variables
 import "./config/env.js";
 
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import { connectDB } from "./config/database.js";
 
@@ -11,8 +15,16 @@ import tripRoutes from "./routes/trip.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const UI_URL = process.env.UI_URL!;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://127.0.0.1:5173", "http://localhost:5173", UI_URL],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
