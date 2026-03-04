@@ -8,6 +8,7 @@ import { TripPlanner } from "./components/TripPlanner";
 import { MyAccount } from "./components/MyAccount";
 import { LandingPage } from "./components/LandingPage";
 import { TripProvider } from "./contexts/TripContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import {
   MapPin,
   Users,
@@ -21,32 +22,31 @@ import { Toaster } from "./components/ui/sonner";
 import { Button } from "./components/ui/button";
 import osoLogo from "./assets/oso-logo.png";
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState("planner");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-
-  const handleLogin = (email, password) => {
-    setUser({ email, name: email.split("@")[0] });
-    setIsAuthenticated(true);
-  };
-
-  const handleSignUp = (email, password, name) => {
-    setUser({ email, name });
-    setIsAuthenticated(true);
-  };
+  const { user, isAuthenticated, logout, loading } = useAuth();
 
   const handleLogout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
+    logout();
     setActiveTab("planner");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <img src={osoLogo} alt="OSO Logo" className="h-32 mx-auto mb-4" />
+          <p className="text-lg" style={{ color: "#3d5a3d" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
       <>
         <Toaster />
-        <LandingPage onLogin={handleLogin} onSignUp={handleSignUp} />
+        <LandingPage />
       </>
     );
   }
@@ -161,5 +161,13 @@ export default function App() {
         </Tabs>
       </div>
     </TripProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

@@ -1,3 +1,10 @@
+// Auth hooks
+export * from './useRegister';
+export * from './useLogin';
+export * from './useGetProfile';
+export * from './useUpdateProfile';
+export * from './useChangePassword';
+
 // Chat hooks
 export * from './useCreateChatSession';
 export * from './useSendMessage';

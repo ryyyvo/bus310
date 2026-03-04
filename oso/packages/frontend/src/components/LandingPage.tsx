@@ -3,25 +3,35 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 import osoLogo from '../assets/oso-logo.png';
 
-interface LandingPageProps {
-  onLogin: (email: string, password: string) => void;
-  onSignUp: (email: string, password: string, name: string) => void;
-}
-
-export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
+export function LandingPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const { login, register, loading, error } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    let success = false;
     if (isSignUp) {
-      onSignUp(email, password, name);
+      success = await register({ email, password, name });
+      if (success) {
+        toast.success('Account created successfully!');
+      }
     } else {
-      onLogin(email, password);
+      success = await login({ email, password });
+      if (success) {
+        toast.success('Welcome back!');
+      }
+    }
+
+    if (!success && error) {
+      toast.error(error.message || 'Authentication failed');
     }
   };
 
@@ -92,8 +102,9 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                     type="submit"
                     className="w-full"
                     style={{ backgroundColor: '#3d5a3d' }}
+                    disabled={loading}
                   >
-                    {isSignUp ? 'Sign Up' : 'Log In'}
+                    {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Log In'}
                   </Button>
                 </form>
                 <div className="mt-4 text-center text-sm">
