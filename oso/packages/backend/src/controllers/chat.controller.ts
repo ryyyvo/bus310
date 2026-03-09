@@ -170,9 +170,9 @@ export const getUserChatSessions = async (req: AuthRequest, res: Response) => {
       .sort({ updatedAt: -1 })
       .limit(20);
 
-    res.json(sessions);
+    return res.json(sessions);
   } catch (error) {
     console.error("Error fetching user sessions:", error);
-    res.status(500).json({ error: "Failed to fetch chat sessions" });
+    return res.status(500).json({ error: "Failed to fetch chat sessions" });
   }
 };
