@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { SiteBooking } from "./components/SiteBooking";
 import { MealPlanning } from "./components/MealPlanning";
+import { GearPlanning } from "./components/GearPlanning";
 import { GroupCoordination } from "./components/GroupCoordination";
 import { ActivityPlanning } from "./components/ActivityPlanning";
 import { TripPlanner } from "./components/TripPlanner";
@@ -16,6 +17,7 @@ import {
   Sparkles,
   UserCircle,
   Mountain,
+  Backpack,
   LogOut,
 } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
@@ -83,13 +85,10 @@ function AppContent() {
                     <span className="hidden sm:inline">Meal Planning</span>
                     <span className="sm:hidden">Meals</span>
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="activities"
-                    className="flex items-center gap-2 data-[state=active]:bg-[#3d5a3d] data-[state=active]:text-white"
-                  >
-                    <Mountain className="h-4 w-4" />
-                    <span className="hidden sm:inline">Activities</span>
-                    <span className="sm:hidden">Activities</span>
+                  <TabsTrigger value="gear" className="flex items-center gap-2 data-[state=active]:bg-[#3d5a3d] data-[state=active]:text-white">
+                    <Backpack className="h-4 w-4" />
+                    <span className="hidden sm:inline">Gear Planning</span>
+                    <span className="sm:hidden">Gear</span>
                   </TabsTrigger>
                   <TabsTrigger value="group" className="flex items-center gap-2 data-[state=active]:bg-[#3d5a3d] data-[state=active]:text-white">
                     <Users className="h-4 w-4" />
@@ -139,8 +138,8 @@ function AppContent() {
             <MealPlanning />
           </TabsContent>
 
-          <TabsContent value="activities">
-            <ActivityPlanning />
+          <TabsContent value="gear">
+            <GearPlanning />
           </TabsContent>
 
           <TabsContent value="group">

@@ -1,18 +1,15 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Separator } from './ui/separator';
-import { User, MapPin, Calendar, Users, Tent, Edit, Mail, Phone } from 'lucide-react';
-
-interface Trip {
-  id: string;
-  destination: string;
-  dates: string;
-  duration: string;
-  companions: number;
-  status: 'completed' | 'upcoming';
-}
+import { User, MapPin, Calendar, Users, Tent, Edit, Mail, Phone, CheckCircle2, Loader2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTripContext } from '../contexts/TripContext';
+import { useGetUserTrips } from '../hooks';
+import { toast } from 'sonner';
+import type { Trip } from '../types';
 
 interface Friend {
   id: string;
@@ -22,41 +19,6 @@ interface Friend {
   lastTrip: string;
   lastTripDate: string;
 }
-
-const mockTrips: Trip[] = [
-  {
-    id: '1',
-    destination: 'Yosemite National Park, CA',
-    dates: 'June 15-18, 2025',
-    duration: '3 nights',
-    companions: 4,
-    status: 'upcoming',
-  },
-  {
-    id: '2',
-    destination: 'Grand Canyon, AZ',
-    dates: 'March 10-14, 2025',
-    duration: '4 nights',
-    companions: 6,
-    status: 'completed',
-  },
-  {
-    id: '3',
-    destination: 'Glacier National Park, MT',
-    dates: 'September 5-9, 2024',
-    duration: '4 nights',
-    companions: 3,
-    status: 'completed',
-  },
-  {
-    id: '4',
-    destination: 'Joshua Tree National Park, CA',
-    dates: 'January 20-22, 2024',
-    duration: '2 nights',
-    companions: 2,
-    status: 'completed',
-  },
-];
 
 const mockFriends: Friend[] = [
   {
@@ -94,6 +56,35 @@ const mockFriends: Friend[] = [
 ];
 
 export function MyAccount() {
+  const { user } = useAuth();
+  const { currentTrip, setCurrentTrip } = useTripContext();
+  const { getUserTrips, loading: loadingTrips } = useGetUserTrips();
+  const [trips, setTrips] = useState<Trip[]>([]);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      const response = await getUserTrips();
+      if (response) {
+        setTrips(response.trips);
+      }
+    };
+
+    fetchTrips();
+  }, []);
+
+  const handleSelectTrip = (trip: Trip) => {
+    setCurrentTrip(trip);
+    toast.success(`Switched to trip: ${trip.name}`);
+  };
+
+  const calculateNights = (startDate: Date, endDate: Date) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   return (
     <div className="space-y-6">
       {/* Personal Information */}
@@ -116,29 +107,25 @@ export function MyAccount() {
         <CardContent>
           <div className="flex items-start gap-6">
             <Avatar className="h-20 w-20">
-              <AvatarFallback className="text-2xl">JD</AvatarFallback>
+              <AvatarFallback className="text-2xl">
+                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-3">
               <div>
-                <h3 className="text-xl font-semibold">John Doe</h3>
-                <p className="text-sm text-muted-foreground">Member since January 2024</p>
+                <h3 className="text-xl font-semibold">{user?.name || 'User'}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Member since {new Date(user?.createdAt || '').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>john.doe@email.com</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>(555) 123-4567</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>San Francisco, CA</span>
+                  <span>{user?.email}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Tent className="h-4 w-4 text-muted-foreground" />
-                  <span>{mockTrips.filter(t => t.status === 'completed').length} trips completed</span>
+                  <span>{trips.filter(t => t.status === 'completed').length} trips completed</span>
                 </div>
               </div>
             </div>
@@ -151,45 +138,75 @@ export function MyAccount() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Trip History
+            My Trips
           </CardTitle>
-          <CardDescription>Your past and upcoming camping adventures</CardDescription>
+          <CardDescription>Your camping trip collection - select one to make it active</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {mockTrips.map((trip, index) => (
-              <div key={trip.id}>
-                {index > 0 && <Separator className="my-4" />}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{trip.destination}</h4>
-                      <Badge variant={trip.status === 'upcoming' ? 'default' : 'secondary'}>
-                        {trip.status === 'upcoming' ? 'Upcoming' : 'Completed'}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {trip.dates}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Tent className="h-3 w-3" />
-                        {trip.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {trip.companions} people
-                      </span>
+          {loadingTrips ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : trips.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Tent className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No trips yet. Create your first trip from the Site Booking tab!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {trips.map((trip, index) => {
+                const isActive = currentTrip?._id === trip._id;
+                const nights = calculateNights(trip.startDate, trip.endDate);
+                return (
+                  <div key={trip._id}>
+                    {index > 0 && <Separator className="my-4" />}
+                    <div className={`flex items-start justify-between gap-4 p-3 rounded-lg transition-colors ${
+                      isActive ? 'bg-primary/10 border border-primary/30' : 'hover:bg-accent'
+                    }`}>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-semibold">{trip.name}</h4>
+                          {isActive && (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Active
+                            </Badge>
+                          )}
+                          <Badge variant={trip.status === 'planning' ? 'secondary' : 'outline'}>
+                            {trip.status}
+                          </Badge>
+                        </div>
+                        {trip.campsite?.parkName && (
+                          <p className="text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3 inline mr-1" />
+                            {trip.campsite.parkName}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Tent className="h-3 w-3" />
+                            {nights} {nights === 1 ? 'night' : 'nights'}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant={isActive ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleSelectTrip(trip)}
+                        disabled={isActive}
+                      >
+                        {isActive ? 'Selected' : 'Select Trip'}
+                      </Button>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -237,11 +254,11 @@ export function MyAccount() {
       </Card>
 
       {/* Account Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{mockTrips.length}</p>
+              <p className="text-3xl font-bold text-primary">{trips.length}</p>
               <p className="text-sm text-muted-foreground mt-1">Total Trips</p>
             </div>
           </CardContent>
@@ -250,25 +267,19 @@ export function MyAccount() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-primary">
-                {mockTrips.reduce((acc, trip) => acc + parseInt(trip.duration), 0)}
+                {trips.reduce((acc, trip) => acc + calculateNights(trip.startDate, trip.endDate), 0)}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">Nights Camped</p>
+              <p className="text-sm text-muted-foreground mt-1">Nights Planned</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{mockFriends.length}</p>
-              <p className="text-sm text-muted-foreground mt-1">Camping Friends</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">6</p>
-              <p className="text-sm text-muted-foreground mt-1">States Visited</p>
+              <p className="text-3xl font-bold text-primary">
+                {trips.filter(t => t.status === 'completed').length}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Trips Completed</p>
             </div>
           </CardContent>
         </Card>

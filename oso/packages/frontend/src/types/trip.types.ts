@@ -9,19 +9,22 @@ export interface ActivityItem {
 
 export interface GearItem {
   item: string;
-  quantity?: number;
+  quantity?: number | string; // Allow both number and string for flexibility
   category?: string;
   assignedTo?: string;
   purchased?: boolean;
   purchaseUrl?: string;
+  notes?: string;
 }
 
 export interface FoodItem {
   item: string;
   meal?: string;
   day?: number;
+  quantity?: string;
   assignedTo?: string;
   purchased?: boolean;
+  notes?: string;
 }
 
 export interface ItineraryDay {
@@ -160,4 +163,28 @@ export interface UpdateItineraryRequest {
 
 export interface UpdateItineraryResponse {
   trip: Trip;
+}
+
+// AI Generation types
+export interface GenerateMealPlanRequest {
+  numberOfDays: number;
+  numberOfPeople: number;
+  dietaryRestrictions?: string[];
+  preferences?: string[];
+}
+
+export interface GenerateMealPlanResponse {
+  mealPlan: FoodItem[];
+}
+
+export interface GenerateGearListRequest {
+  numberOfDays: number;
+  numberOfPeople: number;
+  campingStyle?: string;
+  weather?: string;
+  activities?: string[];
+}
+
+export interface GenerateGearListResponse {
+  gearList: GearItem[];
 }

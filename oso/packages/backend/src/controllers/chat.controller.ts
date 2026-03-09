@@ -4,15 +4,19 @@ import aiService from "../services/ai.service.js";
 import campsiteService from "../services/campsite.service.js";
 import type { SendMessageRequest, Park } from "../types";
 
+interface AuthRequest extends Request {
+  userId?: string;
+}
+
 /**
  * Create a new chat session
  */
-export const createChatSession = async (req: Request, res: Response) => {
+export const createChatSession = async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.body;
+    const userId = req.userId;
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const chatSession = new ChatSession({
@@ -154,9 +158,13 @@ export const getChatSession = async (req: Request, res: Response) => {
 /**
  * Get all chat sessions for a user
  */
-export const getUserChatSessions = async (req: Request, res: Response) => {
+export const getUserChatSessions = async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
     const sessions = await ChatSession.find({ userId })
       .sort({ updatedAt: -1 })

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import type {
   Trip,
   ChatMessage,
@@ -9,7 +10,7 @@ import type {
 
 interface TripContextType {
   // User
-  userId: string;
+  userId: string | null;
 
   // Current chat session
   currentSessionId: string | null;
@@ -41,10 +42,9 @@ interface TripProviderProps {
 }
 
 export function TripProvider({ children }: TripProviderProps) {
-  // Get default user ID from environment (for development)
-  const [userId] = useState<string>(
-    import.meta.env.VITE_DEFAULT_USER_ID || 'dev-user-123'
-  );
+  // Get authenticated user ID
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
   // Chat session state
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -61,11 +61,21 @@ export function TripProvider({ children }: TripProviderProps) {
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isLoadingTrip, setIsLoadingTrip] = useState(false);
 
-  // Load session from localStorage on mount
+  // Load session and trip from localStorage on mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem('currentSessionId');
     if (savedSessionId) {
       setCurrentSessionId(savedSessionId);
+    }
+
+    const savedTrip = localStorage.getItem('currentTrip');
+    if (savedTrip) {
+      try {
+        setCurrentTrip(JSON.parse(savedTrip));
+      } catch (error) {
+        console.error('Failed to parse saved trip:', error);
+        localStorage.removeItem('currentTrip');
+      }
     }
   }, []);
 
@@ -77,6 +87,15 @@ export function TripProvider({ children }: TripProviderProps) {
       localStorage.removeItem('currentSessionId');
     }
   }, [currentSessionId]);
+
+  // Save trip to localStorage when it changes
+  useEffect(() => {
+    if (currentTrip) {
+      localStorage.setItem('currentTrip', JSON.stringify(currentTrip));
+    } else {
+      localStorage.removeItem('currentTrip');
+    }
+  }, [currentTrip]);
 
   const value: TripContextType = {
     userId,

@@ -28,3 +28,5 @@ export * from './useAddCollaborator';
 export * from './useUpdateGearList';
 export * from './useUpdateFoodList';
 export * from './useUpdateItinerary';
+export * from './useGenerateMealPlan';
+export * from './useGenerateGearList';

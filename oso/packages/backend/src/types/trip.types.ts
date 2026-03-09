@@ -9,19 +9,22 @@ export interface ActivityItem {
 
 export interface GearItem {
   item: string;
-  quantity?: number;
+  quantity?: number | string; // Allow both number and string for flexibility
   category?: string;
   assignedTo?: string;
   purchased?: boolean;
   purchaseUrl?: string;
+  notes?: string;
 }
 
 export interface FoodItem {
   item: string;
   meal?: string;
   day?: number;
+  quantity?: string;
   assignedTo?: string;
   purchased?: boolean;
+  notes?: string;
 }
 
 export interface ItineraryDay {

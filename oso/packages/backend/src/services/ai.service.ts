@@ -204,6 +204,110 @@ Return only the JSON object, no explanation.`;
       return { query: "", state: "CA", activities: [] };
     }
   }
+
+  /**
+   * Generate meal plan recommendations
+   */
+  async generateMealPlan(params: {
+    numberOfDays: number;
+    numberOfPeople: number;
+    dietaryRestrictions?: string[];
+    preferences?: string[];
+  }): Promise<any[]> {
+    try {
+      const { numberOfDays, numberOfPeople, dietaryRestrictions = [], preferences = [] } = params;
+
+      const prompt = `Generate a meal plan for a ${numberOfDays}-day camping trip for ${numberOfPeople} people.
+
+${dietaryRestrictions.length > 0 ? `Dietary restrictions: ${dietaryRestrictions.join(", ")}` : ""}
+${preferences.length > 0 ? `Preferences: ${preferences.join(", ")}` : ""}
+
+Return a JSON array of meal items with this structure:
+[
+  {
+    "item": "Oatmeal with dried fruit",
+    "meal": "breakfast",
+    "day": 1,
+    "quantity": "4 servings",
+    "notes": "Easy to prepare, no refrigeration needed"
+  }
+]
+
+Include breakfast, lunch, dinner, and snacks for each day. Keep it practical for camping (no refrigeration unless noted). Return ONLY the JSON array, no explanation.`;
+
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const content = response.choices[0].message.content;
+      if (content) {
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      }
+
+      return [];
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error generating meal plan:", err.message);
+      throw new Error("Failed to generate meal plan");
+    }
+  }
+
+  /**
+   * Generate gear list recommendations
+   */
+  async generateGearList(params: {
+    numberOfDays: number;
+    numberOfPeople: number;
+    campingStyle?: string;
+    weather?: string;
+    activities?: string[];
+  }): Promise<any[]> {
+    try {
+      const { numberOfDays, numberOfPeople, campingStyle = "car camping", weather = "mild", activities = [] } = params;
+
+      const prompt = `Generate a gear list for a ${numberOfDays}-day ${campingStyle} trip for ${numberOfPeople} people.
+
+Weather conditions: ${weather}
+${activities.length > 0 ? `Planned activities: ${activities.join(", ")}` : ""}
+
+Return a JSON array of gear items with this structure:
+[
+  {
+    "item": "Tent",
+    "quantity": 1,
+    "category": "Shelter",
+    "notes": "4-person capacity recommended"
+  }
+]
+
+Include essential categories: Shelter, Sleep System, Cooking, Clothing, Safety, etc. Return ONLY the JSON array, no explanation.`;
+
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const content = response.choices[0].message.content;
+      if (content) {
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      }
+
+      return [];
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error generating gear list:", err.message);
+      throw new Error("Failed to generate gear list");
+    }
+  }
 }
 
 export default new AIService();

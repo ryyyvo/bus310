@@ -5,8 +5,12 @@ import {
   getChatSession,
   getUserChatSessions,
 } from "../controllers/chat.controller.js";
+import { authenticate } from "../config/auth.middleware.js";
 
 const router = express.Router();
+
+// All chat routes require authentication
+router.use(authenticate);
 
 // Create new chat session
 router.post("/sessions", createChatSession);
@@ -18,6 +22,6 @@ router.post("/sessions/:sessionId/messages", sendMessage);
 router.get("/sessions/:sessionId", getChatSession);
 
 // Get user's chat sessions
-router.get("/users/:userId/sessions", getUserChatSessions);
+router.get("/sessions", getUserChatSessions);
 
 export default router;

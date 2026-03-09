@@ -1,29 +1,36 @@
 import type { Request, Response } from "express";
 import Trip from "../models/Trip.model.js";
 import ChatSession from "../models/ChatSession.model.js";
+import aiService from "../services/ai.service.js";
 import type { CreateTripRequest } from "../types/index.js";
+
+interface AuthRequest extends Request {
+  userId?: string;
+}
 
 /**
  * Create a new trip
  */
-export const createTrip = async (req: Request, res: Response) => {
+export const createTrip = async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const { chatSessionId, ...tripData } = req.body as CreateTripRequest;
 
     // Validate required fields
-    if (
-      !tripData.name ||
-      !tripData.owner ||
-      !tripData.startDate ||
-      !tripData.endDate
-    ) {
+    if (!tripData.name || !tripData.startDate || !tripData.endDate) {
       return res.status(400).json({
-        error: "Missing required fields: name, owner, startDate, endDate",
+        error: "Missing required fields: name, startDate, endDate",
       });
     }
 
     const trip = new Trip({
       ...tripData,
+      owner: userId, // Use authenticated user as owner
       chatSessionId,
       status: "planning",
     });
@@ -67,9 +74,13 @@ export const getTrip = async (req: Request, res: Response) => {
 /**
  * Get all trips for a user
  */
-export const getUserTrips = async (req: Request, res: Response) => {
+export const getUserTrips = async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
     const trips = await Trip.find({
       $or: [{ owner: userId }, { collaborators: userId }],
@@ -231,5 +242,64 @@ export const updateItinerary = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating itinerary:", error);
     return res.status(500).json({ error: "Failed to update itinerary" });
+  }
+};
+
+/**
+ * Generate AI meal plan
+ */
+export const generateMealPlan = async (req: Request, res: Response) => {
+  try {
+    const { numberOfDays, numberOfPeople, dietaryRestrictions, preferences } = req.body;
+
+    if (!numberOfDays || !numberOfPeople) {
+      return res.status(400).json({
+        error: "numberOfDays and numberOfPeople are required",
+      });
+    }
+
+    const mealPlan = await aiService.generateMealPlan({
+      numberOfDays,
+      numberOfPeople,
+      dietaryRestrictions,
+      preferences,
+    });
+
+    return res.json({
+      mealPlan,
+    });
+  } catch (error) {
+    console.error("Error generating meal plan:", error);
+    return res.status(500).json({ error: "Failed to generate meal plan" });
+  }
+};
+
+/**
+ * Generate AI gear list
+ */
+export const generateGearList = async (req: Request, res: Response) => {
+  try {
+    const { numberOfDays, numberOfPeople, campingStyle, weather, activities } = req.body;
+
+    if (!numberOfDays || !numberOfPeople) {
+      return res.status(400).json({
+        error: "numberOfDays and numberOfPeople are required",
+      });
+    }
+
+    const gearList = await aiService.generateGearList({
+      numberOfDays,
+      numberOfPeople,
+      campingStyle,
+      weather,
+      activities,
+    });
+
+    return res.json({
+      gearList,
+    });
+  } catch (error) {
+    console.error("Error generating gear list:", error);
+    return res.status(500).json({ error: "Failed to generate gear list" });
   }
 };

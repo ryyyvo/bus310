@@ -10,19 +10,22 @@ const activitySchema = new mongoose.Schema({
 
 const gearItemSchema = new mongoose.Schema({
   item: { type: String, required: true },
-  quantity: { type: Number, default: 1 },
+  quantity: { type: mongoose.Schema.Types.Mixed, default: 1 }, // Allow both Number and String
   category: String,
   assignedTo: String,
   purchased: { type: Boolean, default: false },
   purchaseUrl: String,
+  notes: String, // Add notes field that AI is using
 });
 
 const foodItemSchema = new mongoose.Schema({
   item: { type: String, required: true },
   meal: String,
   day: Number,
+  quantity: String, // Allow string quantities like "4 servings"
   assignedTo: String,
   purchased: { type: Boolean, default: false },
+  notes: String, // Add notes field that AI might use
 });
 
 const itineraryDaySchema = new mongoose.Schema({

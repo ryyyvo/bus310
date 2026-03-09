@@ -81,8 +81,12 @@ class CampsiteService {
     try {
       const cacheKey = `campgrounds_${parkCode}`;
       const cached = cache.get<Campground[]>(cacheKey);
-      if (cached) return cached;
+      if (cached) {
+        console.log(`Returning cached campgrounds for ${parkCode}`);
+        return cached;
+      }
 
+      console.log(`Fetching campgrounds for parkCode: ${parkCode}`);
       const response = await axios.get(`${NPS_BASE_URL}/campgrounds`, {
         params: {
           parkCode,
@@ -90,12 +94,30 @@ class CampsiteService {
         },
       });
 
-      const campgrounds: Campground[] = response.data.data;
+      console.log(`NPS API Response for ${parkCode}:`, {
+        total: response.data.total,
+        count: response.data.data?.length || 0,
+        limit: response.data.limit,
+      });
+
+      const campgrounds: Campground[] = response.data.data || [];
+
+      // Even if empty, cache it to avoid repeated API calls
       cache.set(cacheKey, campgrounds);
+
+      if (campgrounds.length === 0) {
+        console.log(`No campgrounds found in NPS API for parkCode: ${parkCode}`);
+      }
+
       return campgrounds;
     } catch (error) {
-      const err = error as Error;
-      console.error("Error fetching campgrounds:", err.message);
+      const err = error as any;
+      console.error("Error fetching campgrounds:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        parkCode,
+      });
       throw new Error("Failed to fetch campgrounds");
     }
   }
