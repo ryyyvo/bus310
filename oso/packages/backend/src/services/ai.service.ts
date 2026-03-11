@@ -1,5 +1,10 @@
 import Groq from "groq-sdk";
-import type { UserConstraints, ChatMessage, ChatPreferences, SearchParams } from "../types/index.js";
+import type {
+  UserConstraints,
+  ChatMessage,
+  ChatPreferences,
+  SearchParams,
+} from "../types/index.js";
 
 class AIService {
   private client: Groq;
@@ -9,7 +14,7 @@ class AIService {
     this.client = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
-    this.model = "meta-llama/llama-4-maverick-17b-128e-instruct";
+    this.model = "llama-3.1-8b-instant";
   }
 
   /**
@@ -63,7 +68,7 @@ class AIService {
   async chat(
     messages: ChatMessage[],
     campsiteContext: string = "",
-    constraints: UserConstraints | null = null
+    constraints: UserConstraints | null = null,
   ): Promise<string> {
     try {
       const constraintsText = this.formatConstraints(constraints);
@@ -105,7 +110,9 @@ ${campsiteContext}
           content: systemPrompt,
         },
         ...messages.map((msg) => ({
-          role: (msg.role === "assistant" ? "assistant" : "user") as "user" | "assistant",
+          role: (msg.role === "assistant" ? "assistant" : "user") as
+            | "user"
+            | "assistant",
           content: msg.content,
         })),
       ];
@@ -127,7 +134,9 @@ ${campsiteContext}
   /**
    * Extract user preferences from conversation
    */
-  async extractPreferences(messages: ChatMessage[]): Promise<Partial<ChatPreferences>> {
+  async extractPreferences(
+    messages: ChatMessage[],
+  ): Promise<Partial<ChatPreferences>> {
     try {
       const conversationText = messages
         .map((m) => `${m.role}: ${m.content}`)
@@ -215,7 +224,12 @@ Return only the JSON object, no explanation.`;
     preferences?: string[];
   }): Promise<any[]> {
     try {
-      const { numberOfDays, numberOfPeople, dietaryRestrictions = [], preferences = [] } = params;
+      const {
+        numberOfDays,
+        numberOfPeople,
+        dietaryRestrictions = [],
+        preferences = [],
+      } = params;
 
       const prompt = `Generate a meal plan for a ${numberOfDays}-day camping trip for ${numberOfPeople} people.
 
@@ -268,7 +282,13 @@ Include breakfast, lunch, dinner, and snacks for each day. Keep it practical for
     activities?: string[];
   }): Promise<any[]> {
     try {
-      const { numberOfDays, numberOfPeople, campingStyle = "car camping", weather = "mild", activities = [] } = params;
+      const {
+        numberOfDays,
+        numberOfPeople,
+        campingStyle = "car camping",
+        weather = "mild",
+        activities = [],
+      } = params;
 
       const prompt = `Generate a gear list for a ${numberOfDays}-day ${campingStyle} trip for ${numberOfPeople} people.
 
